@@ -1,0 +1,36 @@
+{"timestamp": "2026-11-22T16:55:50.604991+00:00", "event_type": "run_started", "run_id": "bugfix-alias-collision"}
+{"timestamp": "2026-11-22T16:55:50.605123+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["intake_bug_report"]}
+{"timestamp": "2026-11-22T16:55:50.605228+00:00", "event_type": "node_started", "node_id": "intake_bug_report"}
+{"timestamp": "2026-11-22T16:55:50.605283+00:00", "event_type": "node_succeeded", "node_id": "intake_bug_report", "used_fallback": false}
+{"timestamp": "2026-11-22T16:55:50.605340+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["root_cause_analysis"]}
+{"timestamp": "2026-11-22T16:55:50.605394+00:00", "event_type": "node_started", "node_id": "root_cause_analysis"}
+{"timestamp": "2026-11-22T16:55:50.605729+00:00", "event_type": "node_succeeded", "node_id": "root_cause_analysis", "used_fallback": false}
+{"timestamp": "2026-11-22T16:55:50.605784+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["design_fix"]}
+{"timestamp": "2026-11-22T16:55:50.605826+00:00", "event_type": "node_started", "node_id": "design_fix"}
+{"timestamp": "2026-11-22T16:55:50.605858+00:00", "event_type": "node_succeeded", "node_id": "design_fix", "used_fallback": false}
+{"timestamp": "2026-11-22T16:55:50.605890+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["write_regression_test", "update_docs"]}
+{"timestamp": "2026-11-22T16:55:50.605922+00:00", "event_type": "node_started", "node_id": "write_regression_test"}
+{"timestamp": "2026-11-22T16:55:50.606530+00:00", "event_type": "node_succeeded", "node_id": "write_regression_test", "used_fallback": false}
+{"timestamp": "2026-11-22T16:55:50.606567+00:00", "event_type": "node_started", "node_id": "update_docs"}
+{"timestamp": "2026-11-22T16:55:50.606891+00:00", "event_type": "node_succeeded", "node_id": "update_docs", "used_fallback": false}
+{"timestamp": "2026-11-22T16:55:50.606941+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["reproduce_bug"]}
+{"timestamp": "2026-11-22T16:55:50.606982+00:00", "event_type": "node_started", "node_id": "reproduce_bug"}
+{"timestamp": "2026-11-22T16:56:03.413375+00:00", "event_type": "node_succeeded", "node_id": "reproduce_bug", "used_fallback": false}
+{"timestamp": "2026-11-22T16:56:03.413516+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["implement_fix"]}
+{"timestamp": "2026-11-22T16:56:03.413585+00:00", "event_type": "node_started", "node_id": "implement_fix"}
+{"timestamp": "2026-11-22T16:56:03.414188+00:00", "event_type": "node_succeeded", "node_id": "implement_fix", "used_fallback": false}
+{"timestamp": "2026-11-22T16:56:03.414256+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["run_tests"]}
+{"timestamp": "2026-11-22T16:56:03.414309+00:00", "event_type": "node_started", "node_id": "run_tests"}
+{"timestamp": "2026-11-22T16:56:21.075294+00:00", "event_type": "node_succeeded", "node_id": "run_tests", "used_fallback": false}
+{"timestamp": "2026-11-22T16:56:21.075451+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["policy_check"]}
+{"timestamp": "2026-11-22T16:56:21.075526+00:00", "event_type": "node_started", "node_id": "policy_check"}
+{"timestamp": "2026-11-22T16:56:21.077241+00:00", "event_type": "node_succeeded", "node_id": "policy_check", "used_fallback": false}
+{"timestamp": "2026-11-22T16:56:21.077292+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["release_readiness"]}
+{"timestamp": "2026-11-22T16:56:21.077337+00:00", "event_type": "approval_requested", "node_id": "release_readiness", "autonomy": "assisted"}
+{"timestamp": "2026-11-22T16:56:21.077367+00:00", "event_type": "approval_decided", "node_id": "release_readiness", "approved": true}
+{"timestamp": "2026-11-22T16:56:21.077382+00:00", "event_type": "node_started", "node_id": "release_readiness"}
+{"timestamp": "2026-11-22T16:56:21.077414+00:00", "event_type": "node_succeeded", "node_id": "release_readiness", "used_fallback": false}
+{"timestamp": "2026-11-22T16:56:21.077449+00:00", "event_type": "tick_ready", "run_id": "bugfix-alias-collision", "node_ids": ["finalize"]}
+{"timestamp": "2026-11-22T16:56:21.077477+00:00", "event_type": "node_started", "node_id": "finalize"}
+{"timestamp": "2026-11-22T16:56:23.297835+00:00", "event_type": "node_succeeded", "node_id": "finalize", "used_fallback": false}
+{"timestamp": "2026-11-22T16:56:23.298010+00:00", "event_type": "run_completed", "run_id": "bugfix-alias-collision", "succeeded": true, "status_summary": {"intake_bug_report": "succeeded", "root_cause_analysis": "succeeded", "design_fix": "succeeded", "write_regression_test": "succeeded", "reproduce_bug": "succeeded", "implement_fix": "succeeded", "update_docs": "succeeded", "run_tests": "succeeded", "policy_check": "succeeded", "release_readiness": "succeeded", "finalize": "succeeded"}}

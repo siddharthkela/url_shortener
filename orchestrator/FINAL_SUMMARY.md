@@ -13,15 +13,17 @@ deliverable.
 **Sequencing**: the URL shortener app was built first, in isolated phases
 (persistence, validation, analytics, expiration, integration tests,
 observability, Docker), each committed only once its own tests passed —
-17 commits. That work stands as the orchestrator's *target system*: real
+9 commits. That work stands as the orchestrator's *target system*: real
 code with real tests and real architectural decisions worth reasoning
 about, rather than a toy stub. The orchestrator was then built the same
-way — 14 further commits, each a working, tested increment: DAG engine
+way — 20 further commits, each a working, tested increment: DAG engine
 core → gates/policy → reliability → approval → replanning → observability
 → agents → stage wiring → three real scenario demonstrations → this
 documentation. Every commit's tests were green before the next commit
 started; where a real scenario run surfaced a bug, the fix and a
-regression test landed in their own commit before re-running.
+regression test landed in their own commit before re-running. The
+bug-fix and refactor scenarios were added afterwards in the same way,
+bringing the total to five.
 
 **Key design decisions** (see `ARCHITECTURE.md` for the mechanics):
 

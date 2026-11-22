@@ -6,7 +6,6 @@ import com.urlshortener.dto.UpdateUrlRequest;
 import com.urlshortener.dto.UrlResponse;
 import com.urlshortener.entity.ShortUrlEntity;
 import com.urlshortener.exception.AliasAlreadyExistsException;
-import com.urlshortener.exception.InvalidUrlException;
 import com.urlshortener.exception.TooManyActiveUrlsException;
 import com.urlshortener.exception.UnauthorizedOwnerException;
 import com.urlshortener.exception.UrlExpiredException;
@@ -18,8 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -74,8 +71,8 @@ public class UrlService {
     }
 
     private UrlResponse persistShortUrl(CreateUrlRequest request) {
-        validateOriginalUrl(request.originalUrl());
-        validateExpiresAt(request.expiresAt());
+        UrlValidator.validateOriginalUrl(request.originalUrl());
+        UrlValidator.validateExpiresAt(request.expiresAt());
 
         if (repository.countByActiveTrue() >= maxActiveUrls) {
             throw new TooManyActiveUrlsException("Maximum number of active short URLs reached");
@@ -126,11 +123,11 @@ public class UrlService {
         ShortUrlEntity entity = findOwnedActiveOrThrow(shortCode, ownerTokenHeader);
 
         if (request.originalUrl() != null && !request.originalUrl().isBlank()) {
-            validateOriginalUrl(request.originalUrl());
+            UrlValidator.validateOriginalUrl(request.originalUrl());
             entity.setOriginalUrl(request.originalUrl());
         }
         if (request.expiresAt() != null) {
-            validateExpiresAt(request.expiresAt());
+            UrlValidator.validateExpiresAt(request.expiresAt());
             entity.setExpiresAt(request.expiresAt());
         }
 
@@ -151,9 +148,7 @@ public class UrlService {
      * tell "expired" apart from "never existed".
      */
     private ShortUrlEntity findActiveOrThrow(String shortCode) {
-        ShortUrlEntity entity = repository.findByShortCode(shortCode)
-                .filter(ShortUrlEntity::isActive)
-                .orElseThrow(() -> new UrlNotFoundException("Short code not found: " + shortCode));
+        ShortUrlEntity entity = findActiveByShortCodeOrThrow(shortCode);
         if (entity.getExpiresAt() != null && entity.getExpiresAt().isBefore(Instant.now())) {
             throw new UrlExpiredException("Short code has expired: " + shortCode);
         }
@@ -166,9 +161,7 @@ public class UrlService {
      * to distinct status codes (404 / 403).
      */
     private ShortUrlEntity findOwnedActiveOrThrow(String shortCode, String ownerTokenHeader) {
-        ShortUrlEntity entity = repository.findByShortCode(shortCode)
-                .filter(ShortUrlEntity::isActive)
-                .orElseThrow(() -> new UrlNotFoundException("Short code not found: " + shortCode));
+        ShortUrlEntity entity = findActiveByShortCodeOrThrow(shortCode);
         UUID ownerToken = parseOwnerToken(ownerTokenHeader);
         if (!entity.getOwnerToken().equals(ownerToken)) {
             throw new UnauthorizedOwnerException("Owner token does not match");
@@ -176,33 +169,18 @@ public class UrlService {
         return entity;
     }
 
+    /** Shared by both lookups: the row must exist and not be soft-deleted, else 404. */
+    private ShortUrlEntity findActiveByShortCodeOrThrow(String shortCode) {
+        return repository.findByShortCode(shortCode)
+                .filter(ShortUrlEntity::isActive)
+                .orElseThrow(() -> new UrlNotFoundException("Short code not found: " + shortCode));
+    }
+
     private UUID parseOwnerToken(String ownerTokenHeader) {
         try {
             return UUID.fromString(ownerTokenHeader);
         } catch (Exception e) {
             throw new UnauthorizedOwnerException("Missing or invalid owner token");
-        }
-    }
-
-    private void validateOriginalUrl(String url) {
-        URI uri;
-        try {
-            uri = new URI(url);
-        } catch (URISyntaxException e) {
-            throw new InvalidUrlException("Malformed URL: " + url);
-        }
-        String scheme = uri.getScheme();
-        if (scheme == null || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
-            throw new InvalidUrlException("URL must use http or https scheme: " + url);
-        }
-        if (uri.getHost() == null) {
-            throw new InvalidUrlException("Malformed URL: " + url);
-        }
-    }
-
-    private void validateExpiresAt(Instant expiresAt) {
-        if (expiresAt != null && expiresAt.isBefore(Instant.now())) {
-            throw new InvalidUrlException("expiresAt must be in the future");
         }
     }
 }

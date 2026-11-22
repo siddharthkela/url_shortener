@@ -124,3 +124,7 @@ curl -s -X POST http://localhost:8080/api/v1/urls \
   independent, inconsistent dataset.
 - No durability — a restart, crash, or redeploy loses all data. Suitable for
   prototyping/demos, not for links that need to survive a deploy.
+- Code layout — `UrlController` handles HTTP only; `UrlService` owns business
+  rules and persistence; `UrlValidator` holds stateless input validation
+  (URL scheme/host, expiry), unit-tested on its own in `UrlValidatorTest`;
+  `UrlMapper` and `Base62Encoder` are stateless helpers in the same style.

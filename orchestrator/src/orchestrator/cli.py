@@ -37,6 +37,11 @@ def _load_scenario_runners():
         SCENARIO_RUNNERS["bugfix"] = bugfix_alias_collision.run
     except ImportError:
         pass
+    try:
+        from orchestrator.scenarios import refactor_url_service
+        SCENARIO_RUNNERS["refactor"] = refactor_url_service.run
+    except ImportError:
+        pass
     return SCENARIO_RUNNERS
 
 
@@ -48,7 +53,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument(
         "--scenario",
         required=True,
-        choices=["greenfield", "brownfield", "ambiguous", "bugfix"],
+        choices=["greenfield", "brownfield", "ambiguous", "bugfix", "refactor"],
         help="Which demonstration scenario to run",
     )
     run_parser.add_argument(

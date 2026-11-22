@@ -107,3 +107,41 @@ def test_render_run_summary_includes_lineage_metrics_and_risks():
     assert "Per-owner-token limiting" in markdown
     assert "No distributed rate limiting" in markdown
     assert "100%" in markdown
+
+
+def test_count_maven_tests_sums_surefire_reports(tmp_path: Path):
+    from orchestrator.scenarios.common import count_maven_tests
+
+    reports = tmp_path / "target" / "surefire-reports"
+    reports.mkdir(parents=True)
+    (reports / "TEST-a.ATest.xml").write_text('<testsuite name="a.ATest" tests="3"></testsuite>')
+    (reports / "TEST-b.BTest.xml").write_text('<testsuite name="b.BTest" tests="5"></testsuite>')
+    (reports / "a.ATest.txt").write_text("not a report")
+
+    assert count_maven_tests(str(tmp_path)) == 8
+
+
+def test_count_maven_tests_is_zero_without_reports(tmp_path: Path):
+    from orchestrator.scenarios.common import count_maven_tests
+
+    assert count_maven_tests(str(tmp_path)) == 0
+
+
+def test_run_maven_test_clears_stale_reports_and_passes_extra_args(tmp_path: Path, monkeypatch):
+    import orchestrator.scenarios.common as common
+
+    stale = tmp_path / "target" / "surefire-reports"
+    stale.mkdir(parents=True)
+    (stale / "TEST-old.xml").write_text('<testsuite tests="99"></testsuite>')
+    seen = {}
+
+    def fake_run(cmd, **kwargs):
+        seen["cmd"] = cmd
+        return subprocess.CompletedProcess(cmd, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(common.subprocess, "run", fake_run)
+    success, output = common.run_maven_test(str(tmp_path), extra_args=["-Dtest=FooTest"])
+
+    assert success and output == "ok"
+    assert seen["cmd"] == ["./mvnw", "-q", "test", "-Dtest=FooTest"]
+    assert not stale.exists()

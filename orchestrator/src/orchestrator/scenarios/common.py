@@ -1,13 +1,15 @@
-"""Shared infrastructure the three demo scenarios all need: writing real
+"""Shared infrastructure every demo scenario needs: writing real
 files into the target repo, basic git operations, and running the target
 app's actual test suite as a real validation step (not a simulated one).
 """
 from __future__ import annotations
 
+import shutil
 import subprocess
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 
 from orchestrator.engine.context import ExecutionContext
 from orchestrator.observability.metrics import ReliabilityMetrics
@@ -55,9 +57,16 @@ def commit_all(repo_root: str, message: str) -> subprocess.CompletedProcess:
     return run_git(repo_root, "commit", "-m", message)
 
 
-def run_maven_test(repo_root: str, timeout: int = 300) -> Tuple[bool, str]:
+def run_maven_test(repo_root: str, timeout: int = 300, extra_args: Sequence[str] = ()) -> Tuple[bool, str]:
+    """Runs the target app's real test suite. `extra_args` narrows the run
+    (e.g. `-Dtest=SomeTest`) — the bug-fix scenario uses that to prove a
+    regression test fails *before* the fix, without running the whole suite.
+    Old surefire reports are cleared first so count_maven_tests() always
+    describes this run only, never a leftover from an earlier one.
+    """
+    shutil.rmtree(Path(repo_root) / "target" / "surefire-reports", ignore_errors=True)
     result = subprocess.run(
-        ["./mvnw", "-q", "test"],
+        ["./mvnw", "-q", "test", *extra_args],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -65,6 +74,18 @@ def run_maven_test(repo_root: str, timeout: int = 300) -> Tuple[bool, str]:
     )
     output = (result.stdout or "") + (result.stderr or "")
     return result.returncode == 0, output
+
+
+def count_maven_tests(repo_root: str) -> int:
+    """Total test cases executed by the most recent Maven run, read from the
+    surefire XML reports. Used to prove a refactor kept every existing test
+    (the count after must equal the baseline count plus any new tests).
+    """
+    reports = Path(repo_root) / "target" / "surefire-reports"
+    total = 0
+    for report in reports.glob("TEST-*.xml"):
+        total += int(ET.parse(report).getroot().get("tests", "0"))
+    return total
 
 
 def render_run_summary(

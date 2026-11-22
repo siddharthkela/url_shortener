@@ -32,6 +32,11 @@ def _load_scenario_runners():
         SCENARIO_RUNNERS["ambiguous"] = ambiguous_analytics.run
     except ImportError:
         pass
+    try:
+        from orchestrator.scenarios import bugfix_alias_collision
+        SCENARIO_RUNNERS["bugfix"] = bugfix_alias_collision.run
+    except ImportError:
+        pass
     return SCENARIO_RUNNERS
 
 
@@ -43,7 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument(
         "--scenario",
         required=True,
-        choices=["greenfield", "brownfield", "ambiguous"],
+        choices=["greenfield", "brownfield", "ambiguous", "bugfix"],
         help="Which demonstration scenario to run",
     )
     run_parser.add_argument(

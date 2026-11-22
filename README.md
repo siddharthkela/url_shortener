@@ -7,8 +7,9 @@
 > [`orchestrator/ARCHITECTURE.md`](orchestrator/ARCHITECTURE.md) and
 > [`orchestrator/FINAL_SUMMARY.md`](orchestrator/FINAL_SUMMARY.md)). This
 > URL shortener is that system's **target/demo application** — a real,
-> tested Spring Boot service the orchestrator drives three real changes
-> against (greenfield, brownfield, ambiguous-requirement scenarios), not
+> tested Spring Boot service the orchestrator drives five real changes
+> against (greenfield, brownfield, ambiguous-requirement, bug-fix and
+> refactor scenarios), not
 > the deliverable itself.
 
 A single-instance URL shortener service. Spring Boot 3.3.5, Java 21, Spring Data

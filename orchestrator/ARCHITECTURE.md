@@ -35,6 +35,8 @@ graph TB
         GREENFIELD["greenfield_qr_code.py"]
         BROWNFIELD["brownfield_rate_limit.py"]
         AMBIGUOUS["ambiguous_analytics.py"]
+        BUGFIX["bugfix_alias_collision.py"]
+        REFACTOR["refactor_url_service.py"]
     end
 
     DAG -->|constructor params| GATES
@@ -66,6 +68,14 @@ graph TB
     AMBIGUOUS --> DETERMINISTIC
     AMBIGUOUS --> COMMON
     AMBIGUOUS --> REPLAN
+    BUGFIX --> FACTORY
+    BUGFIX --> DETERMINISTIC
+    BUGFIX --> COMMON
+    BUGFIX --> POLICY
+    REFACTOR --> FACTORY
+    REFACTOR --> DETERMINISTIC
+    REFACTOR --> COMMON
+    REFACTOR --> POLICY
 
     METRICS -.reads.-> EVENTLOG
     DASHBOARD -.reads.-> METRICS
@@ -201,6 +211,41 @@ downstream nodes onto it in addition to their original dependency —
 conditional on what `design` actually produced, not scripted to always
 fire (a stub design with no conflict produces zero replan activity, which
 is what one of the structural tests asserts).
+
+## Reproduce-before-fix: the bug-fix scenario
+
+```mermaid
+graph LR
+    I[intake_bug_report] --> RCA[root_cause_analysis] --> D[design_fix]
+    D --> T[write_regression_test] --> R[reproduce_bug] --> F[implement_fix] --> RT[run_tests] --> P[policy_check] --> REL[release_readiness] --> FIN[finalize]
+    D --> UD[update_docs] --> REL
+```
+
+`reproduce_bug` inverts the usual success condition: it runs only the new
+tests (`run_maven_test(extra_args=["-Dtest=..."])`) against the unfixed code
+and succeeds only if they fail with the expected `DataIntegrityViolation`.
+If they pass, there's no reproduction, and if they fail for another reason
+(say, a compile error), it isn't the bug, so in both cases the node fails
+and `implement_fix` is blocked. "No fix without a reproduction" is
+therefore an edge in the graph, not a convention.
+
+## Behavior preservation: the refactor scenario
+
+```mermaid
+graph LR
+    I[intake_requirement] --> A[analyze_codebase] --> D[design] --> B[baseline_tests]
+    B --> IR[implement_refactor] --> RT[run_tests]
+    B --> NT[write_new_tests] --> RT
+    B --> UD[update_docs] --> REL[release_readiness]
+    RT --> BC[behavior_check] --> P[policy_check] --> REL --> FIN[finalize]
+```
+
+Every node that writes files depends on `baseline_tests`, so the baseline
+(full suite green, test count from the surefire reports, UrlService's
+public signatures) always describes the untouched code. `behavior_check`
+then fails the run if the public API changed, if any pre-existing test file
+shows as modified in `git status` (a refactor that needs old tests edited
+is a behavior change), or if the test count isn't exactly baseline + new.
 
 ## Observability
 

@@ -50,8 +50,8 @@ regression test landed in their own commit before re-running.
 
 - **The orchestrator itself**: `orchestrator/src/orchestrator/` —
   engine (7 modules), observability (3), agents (3), stages (2),
-  scenarios (4) — 106 tests, offline, ~1 second.
-- **Three real, verified scenario runs**, each on its own branch with its
+  scenarios (6) — 125 tests, offline, ~1 second.
+- **Five real, verified scenario runs**, each on its own branch with its
   own `events.jsonl` / `dashboard.html` / `SUMMARY.md` under
   `orchestrator/runs/<scenario>/` on `main`:
   - `orchestrator-demo/greenfield-qr-code` — new `GET /{shortCode}/qrcode`
@@ -66,8 +66,31 @@ regression test landed in their own commit before re-running.
     mid-run replan (the initial charting-library idea was discarded for a
     dependency-free redesign). 78 Java tests pass (77 + assertions on 1
     existing test).
+  - `orchestrator-demo/bugfix-alias-collision` — a real defect: a generated
+    code could equal an existing custom alias, failing a plain create with
+    409. The run wrote a regression test first, proved it fails on the
+    unfixed code with the expected `DataIntegrityViolation`, and only then
+    applied the fix. 80 Java tests pass (78 + 2 new).
+  - `orchestrator-demo/refactor-url-service` — validation extracted into
+    `UrlValidator`, duplicated lookup removed, with no behavior change:
+    the run recorded a baseline (78 tests, UrlService's public signatures)
+    and verified afterwards that the API was identical, no existing test
+    was edited, and 78 + 9 new = 87 tests pass.
 - **This documentation**: `README.md` (setup/run instructions),
   `ARCHITECTURE.md` (component/control-flow diagrams), this file.
+
+## Scope coverage
+
+| Assignment scope item | Covered by |
+|---|---|
+| Greenfield (new systems/features) | `greenfield` — new QR-code endpoint, new service and dependency |
+| Brownfield: enhancements | `brownfield` — rate limiting added to the existing create endpoint |
+| Brownfield: refactors | `refactor` — behavior-preserving UrlService cleanup, verified against a recorded baseline |
+| Brownfield: bug fixes | `bugfix` — real collision defect, reproduced by a failing test before the fix |
+| Test improvements | every scenario writes tests; `refactor` adds direct `UrlValidator` tests where validation was only tested indirectly; `bugfix` adds an integration regression test |
+| Documentation improvements | every scenario has an `update_docs` stage; `refactor` documents the code layout, `bugfix` documents alias/code namespace behavior |
+| Well-defined requirements | `greenfield`, `brownfield`, `bugfix`, `refactor` |
+| Ambiguous requirements | `ambiguous` — "better analytics" resolved through a real mid-run replan |
 
 ## Risks and trade-offs
 
@@ -94,7 +117,7 @@ regression test landed in their own commit before re-running.
 
 ## Assumptions
 
-- No `ANTHROPIC_API_KEY` is available or required; all three scenarios run
+- No `ANTHROPIC_API_KEY` is available or required; all five scenarios run
   entirely offline against `DeterministicAgent`.
 - Feature branches are the deliverable, not merges to `main` — reviewing
   and merging is left to a human reviewer, matching the assignment's
@@ -143,7 +166,7 @@ own.
   general mechanism (e.g. a full worktree snapshot) for larger changes.
 - The observability dashboard's DAG layout is a simple longest-path
   layering, not a general graph-layout algorithm — reads clearly for the
-  ~9-12 node DAGs these three scenarios produce; would need a real layout
+  ~9-12 node DAGs these scenarios produce; would need a real layout
   algorithm (e.g. Sugiyama) for much larger graphs.
 - No distributed tracing across multiple orchestrator processes — this is
   a single-run, single-process audit trail, matching the single-machine

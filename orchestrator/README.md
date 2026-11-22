@@ -11,7 +11,7 @@ the exercise.
 
 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how it's built and
 [`FINAL_SUMMARY.md`](FINAL_SUMMARY.md) for the plan/rationale, risks, and
-limitations across all three demo runs.
+limitations across all five demo runs.
 
 ## Setup
 
@@ -30,7 +30,7 @@ pip install -e ".[dev]"
 python -m pytest -q
 ```
 
-106 tests, fully offline, run in ~1 second. Every engine mechanism (DAG
+125 tests, fully offline, run in ~1 second. Every engine mechanism (DAG
 scheduling, parallelism, gates, retries/fallback/rollback, the safe-stop
 circuit breaker, approval checkpoints, dynamic re-planning, observability)
 is exercised against a `DeterministicAgent` — no network calls, no git
@@ -48,7 +48,17 @@ cd ..   # if you're inside orchestrator/
 python -m orchestrator run --scenario greenfield --auto-approve
 python -m orchestrator run --scenario brownfield --auto-approve
 python -m orchestrator run --scenario ambiguous --auto-approve
+python -m orchestrator run --scenario bugfix --auto-approve
+python -m orchestrator run --scenario refactor --auto-approve
 ```
+
+| Scenario | Scope it covers | What it changes |
+|---|---|---|
+| `greenfield` | New feature, well-defined | New `GET /{shortCode}/qrcode` endpoint |
+| `brownfield` | Enhancement to existing code | Rate limiting on URL creation |
+| `ambiguous` | Ambiguous requirement | "Better analytics" resolved via a mid-run replan |
+| `bugfix` | Bug fix | Generated codes colliding with custom aliases (409 on plain creates) |
+| `refactor` | Refactor + test/docs improvement | Extract `UrlValidator`, dedupe lookups, add focused tests |
 
 - `--auto-approve` auto-approves every human-approval checkpoint, for a
   non-interactive demo run. Omit it to be prompted interactively at the
@@ -72,7 +82,7 @@ manual test of the greenfield scenario; see `FINAL_SUMMARY.md`.)
 ## What's pluggable
 
 Every SDLC stage delegates to an `Agent` (`orchestrator/agents/base.py`).
-All three demo scenarios use `DeterministicAgent` — scripted, real,
+All five demo scenarios use `DeterministicAgent` — scripted, real,
 offline logic (real Java gets written, real tests get run) rather than
 live LLM calls. `ClaudeAgent` exists on the same interface for real
 Anthropic API calls and is fully unit-tested (prompt building, response

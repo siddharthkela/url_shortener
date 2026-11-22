@@ -101,6 +101,11 @@ curl -s -X POST http://localhost:8080/api/v1/urls \
   -d '{"originalUrl": "https://example.com", "customAlias": "my-alias"}'
 ```
 
+Custom aliases and generated codes share one namespace. If the next generated
+code would equal an existing alias (for example, alias `abc` is Base62 for id
+140716), the service skips that id and uses the next free one, so a create
+without an alias never fails because of someone else's alias.
+
 ### Observability
 
 - `GET /actuator/health`, `/actuator/info`, `/actuator/metrics`

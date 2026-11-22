@@ -76,6 +76,22 @@ class UrlServiceTest {
     }
 
     @Test
+    void skipsGeneratedCodeAlreadyTakenByCustomAlias() {
+        when(repository.countByActiveTrue()).thenReturn(0L);
+        ShortUrlEntity collidingRow = entityWithId(140716L, "placeholder", false);
+        ShortUrlEntity nextRow = entityWithId(140717L, "placeholder", false);
+        when(repository.save(any(ShortUrlEntity.class))).thenReturn(collidingRow, nextRow, nextRow);
+        // Base62(140716) is "abc": pretend a client already holds it as a custom alias.
+        when(repository.existsByShortCode(Base62Encoder.encode(140716L))).thenReturn(true);
+        when(repository.existsByShortCode(Base62Encoder.encode(140717L))).thenReturn(false);
+
+        UrlResponse response = urlService.createShortUrl(new CreateUrlRequest("https://example.com/page", null, null));
+
+        assertThat(response.shortCode()).isEqualTo(Base62Encoder.encode(140717L));
+        verify(repository).delete(collidingRow);
+    }
+
+    @Test
     void retryWithSameIdempotencyKeyReturnsCachedResponseWithoutCreatingDuplicateRow() {
         when(repository.countByActiveTrue()).thenReturn(0L);
         ShortUrlEntity saved = entityWithId(42L, "placeholder", false);

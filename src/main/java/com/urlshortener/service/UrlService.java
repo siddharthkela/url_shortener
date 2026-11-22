@@ -94,14 +94,26 @@ public class UrlService {
             entity = new ShortUrlEntity(alias, request.originalUrl(), true, ownerToken, now, request.expiresAt());
             entity = repository.save(entity);
         } else {
-            String placeholder = UUID.randomUUID().toString().substring(0, 16);
-            entity = new ShortUrlEntity(placeholder, request.originalUrl(), false, ownerToken, now, request.expiresAt());
-            entity = repository.save(entity);
-            entity.setShortCode(Base62Encoder.encode(entity.getId()));
+            entity = repository.save(newPlaceholderEntity(request, ownerToken, now));
+            String code = Base62Encoder.encode(entity.getId());
+            // Custom aliases share the short-code namespace with generated codes, so
+            // Base62(id) may already be taken by an alias. Skip that id (discard the
+            // row, take the next one) instead of failing the client's request.
+            while (repository.existsByShortCode(code)) {
+                repository.delete(entity);
+                entity = repository.save(newPlaceholderEntity(request, ownerToken, now));
+                code = Base62Encoder.encode(entity.getId());
+            }
+            entity.setShortCode(code);
             entity = repository.save(entity);
         }
 
         return UrlMapper.toResponse(entity, baseUrl);
+    }
+
+    private ShortUrlEntity newPlaceholderEntity(CreateUrlRequest request, UUID ownerToken, Instant now) {
+        String placeholder = UUID.randomUUID().toString().substring(0, 16);
+        return new ShortUrlEntity(placeholder, request.originalUrl(), false, ownerToken, now, request.expiresAt());
     }
 
     public UrlResponse getDetails(String shortCode) {
